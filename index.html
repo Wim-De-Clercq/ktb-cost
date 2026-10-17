@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drink Order Calculator</title>
+  <style>
+    /* ========== CSS STYLES ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      max-width: 600px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    .header {
+      background: #6d4aff;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 14px;
+    }
+
+    .menu-section {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .section-title {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+
+    .drinks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .drink-btn {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      padding: 16px 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+
+    .drink-btn:hover {
+      background: #6d4aff;
+      border-color: #6d4aff;
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(109, 74, 255, 0.3);
+    }
+
+    .drink-btn:active {
+      transform: translateY(0);
+    }
+
+    .drink-name {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .drink-price {
+      font-size: 13px;
+      color: #666;
+    }
+
+    .drink-btn:hover .drink-price {
+      color: #e0e0e0;
+    }
+
+    .order-summary {
+      padding: 20px;
+      background: #f8f9fa;
+    }
+
+    .order-list {
+      list-style: none;
+      margin-bottom: 16px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .order-item:last-child {
+      border-bottom: none;
+    }
+
+    .item-name {
+      font-size: 14px;
+      color: #333;
+    }
+
+    .item-count {
+      background: #6d4aff;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .item-price {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .total-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 0;
+      border-top: 2px solid #ddd;
+    }
+
+    .total-label {
+      font-size: 20px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .total-amount {
+      font-size: 28px;
+      font-weight: 700;
+      color: #6d4aff;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: #6d4aff;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a45cc;
+      box-shadow: 0 4px 12px rgba(109, 74, 255, 0.4);
+    }
+
+    .btn-secondary {
+      background: #e9ecef;
+      color: #495057;
+    }
+
+    .btn-secondary:hover {
+      background: #dee2e6;
+    }
+
+    .empty-message {
+      color: #999;
+      text-align: center;
+      padding: 20px 0;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <!-- ========== HTML STRUCTURE ========== -->
+  <div class="container">
+    <div class="header">
+      <h1>🥤 Drink Order</h1>
+      <p>Select drinks to calculate your total</p>
+    </div>
+
+    <div class="menu-section">
+      <h2 class="section-title">Menu</h2>
+      <div class="drinks-grid" id="drinksGrid"></div>
+    </div>
+
+    <div class="order-summary">
+      <h2 class="section-title">Your Order</h2>
+      <ul class="order-list" id="orderList">
+        <li class="empty-message" id="emptyMessage">No drinks selected yet</li>
+      </ul>
+
+      <div class="total-section">
+        <span class="total-label">Total</span>
+        <span class="total-amount" id="totalAmount">$0.00</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" onclick="resetOrder()">Reset</button>
+        <button class="btn btn-primary" onclick="checkout()">Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== JAVASCRIPT LOGIC ==========
+    
+    // Drink menu data
+    const menu = [
+      { id: 1, name: "Coffee", price: 3.50 },
+      { id: 2, name: "Espresso", price: 2.50 },
+      { id: 3, name: "Latte", price: 4.50 },
+      { id: 4, name: "Cappuccino", price: 4.00 },
+      { id: 5, name: "Tea", price: 2.75 },
+      { id: 6, name: "Green Tea", price: 3.00 },
+      { id: 7, name: "Smoothie", price: 5.50 },
+      { id: 8, name: "Milkshake", price: 6.00 }
+    ];
+
+    // Order state
+    let order = {};
+
+    // Initialize the page
+    function init() {
+      renderMenu();
+    }
+
+    // Render drink buttons
+    function renderMenu() {
+      const grid = document.getElementById('drinksGrid');
+      grid.innerHTML = menu.map(drink => `
+        <button class="drink-btn" onclick="addToOrder(${drink.id})">
+          <div class="drink-name">${drink.name}</div>
+          <div class="drink-price">$${drink.price.toFixed(2)}</div>
+        </button>
+      `).join('');
+    }
+
+    // Add item to order
+    function addToOrder(id) {
+      const drink = menu.find(d => d.id === id);
+      if (drink) {
+        order[id] = (order[id] || 0) + 1;
+        updateSummary();
+      }
+    }
+
+    // Update order summary display
+    function updateSummary() {
+      const orderList = document.getElementById('orderList');
+      const emptyMessage = document.getElementById('emptyMessage');
+      
+      const items = Object.entries(order);
+      
+      if (items.length === 0) {
+        orderList.innerHTML = '<li class="empty-message" id="emptyMessage">No drinks selected yet</li>';
+        document.getElementById('totalAmount').textContent = '$0.00';
+        return;
+      }
+
+      // Hide empty message
+      if (emptyMessage) emptyMessage.style.display = 'none';
+      
+      // Build order list
+      orderList.innerHTML = items.map(([id, count]) => {
+        const drink = menu.find(d => d.id === parseInt(id));
+        return `
+          <li class="order-item">
+            <div>
+              <span class="item-name">${drink.name}</span>
+              <span class="item-count">${count}</span>
+            </div>
+            <span class="item-price">$${(drink.price * count).toFixed(2)}</span>
+          </li>
+        `;
+      }).join('');
+
+      // Calculate and update total
+      const total = items.reduce((sum, [id, count]) => {
+        const drink = menu.find(d => d.id === parseInt(id));
+        return sum + (drink.price * count);
+      }, 0);
+
+      document.getElementById('totalAmount').textContent = `$${total.toFixed(2)}`;
+    }
+
+    // Reset the entire order
+    function resetOrder() {
+      order = {};
+      updateSummary();
+    }
+
+    // Checkout (show confirmation)
+    function checkout() {
+      const items = Object.entries(order);
+      if (items.length === 0) {
+        alert('Your order is empty! Please select some drinks.');
+        return;
+      }
+
+      const total = items.reduce((sum, [id, count]) => {
+        const drink = menu.find(d => d.id === parseInt(id));
+        return sum + (drink.price * count);
+      }, 0);
+
+      const orderSummary = items.map(([id, count]) => {
+        const drink = menu.find(d => d.id === parseInt(id));
+        return `${count}x ${drink.name} ($${(drink.price * count).toFixed(2)})`;
+      }).join('\n');
+
+      alert(`🧾 ORDER CONFIRMED\n\n${orderSummary}\n\n💰 Total: $${total.toFixed(2)}\n\nThank you for your order!`);
+      resetOrder();
+    }
+
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
