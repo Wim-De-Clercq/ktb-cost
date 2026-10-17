@@ -1,357 +1,346 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Drink Order Calculator</title>
-  <style>
-    /* ========== CSS STYLES ========== */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6d4aff">
+<title>Bestelling drankjes</title>
+<style>
+  :root{
+    --paars:#6d4aff;
+    --paars-donker:#5741d6;
+    --inkt:#1b1630;
+    --zacht:#6b6485;
+    --lijn:#e3dfff;
+    --kaart:#ffffff;
+    --achtergrond:#f4f2ff;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--achtergrond);
+    color:var(--inkt);
+    padding-bottom:calc(6.5rem + env(safe-area-inset-bottom));
+  }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+  /* ---- kop ---- */
+  header{
+    position:sticky;top:0;z-index:3;
+    background:var(--paars);color:#fff;
+    padding:.9rem 1rem;
+    padding-top:calc(.9rem + env(safe-area-inset-top));
+  }
+  header h1{margin:0;font-size:1.2rem;}
+  header p{margin:.15rem 0 0;font-size:.8rem;opacity:.85;}
 
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-      max-width: 600px;
-      width: 100%;
-      overflow: hidden;
-    }
+  /* ---- menu ---- */
+  main{max-width:640px;margin:0 auto;padding:.9rem .75rem 1.5rem;}
+  section{margin-bottom:1.4rem;}
+  section h2{
+    margin:0 0 .5rem .2rem;
+    font-size:.78rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:.07em;
+    color:var(--zacht);
+  }
+  menu{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:.55rem;
+    margin:0;padding:0;list-style:none;
+  }
+  @media (min-width:460px){ menu{grid-template-columns:repeat(3,1fr);} }
 
-    .header {
-      background: #6d4aff;
-      color: white;
-      padding: 24px;
-      text-align: center;
-    }
+  menu button{
+    position:relative;
+    width:100%;min-height:62px;
+    display:flex;flex-direction:column;justify-content:center;gap:.1rem;
+    padding:.65rem .75rem;
+    background:var(--kaart);
+    border:2px solid var(--lijn);
+    border-radius:14px;
+    font:inherit;color:inherit;text-align:left;
+    cursor:pointer;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s,border-color .15s,transform .08s;
+  }
+  menu button strong{font-size:.92rem;font-weight:600;line-height:1.2;}
+  menu button small{font-size:.82rem;color:var(--zacht);}
+  menu button:active{transform:scale(.97);}
+  menu button[data-aantal]:not([data-aantal="0"]){
+    background:#efeaff;border-color:var(--paars);
+  }
+  menu button[data-aantal]:not([data-aantal="0"]) small{color:var(--paars-donker);}
+  menu button::after{
+    content:attr(data-aantal);
+    position:absolute;top:.3rem;right:.35rem;
+    min-width:1.5rem;height:1.5rem;
+    display:grid;place-items:center;
+    padding:0 .3rem;
+    border-radius:999px;
+    background:var(--paars);color:#fff;
+    font-size:.75rem;font-weight:700;
+    opacity:1;transform:scale(1);
+    transition:opacity .15s,transform .15s;
+  }
+  menu button[data-aantal="0"]::after{opacity:0;transform:scale(.5);}
 
-    .header h1 {
-      font-size: 28px;
-      margin-bottom: 4px;
-    }
+  /* ---- vaste onderbalk ---- */
+  body > footer{
+    position:fixed;left:0;right:0;bottom:0;z-index:3;
+    display:flex;align-items:center;gap:.6rem;
+    background:#fff;
+    border-top:1px solid var(--lijn);
+    box-shadow:0 -6px 24px rgba(27,22,48,.09);
+    padding:.6rem;
+    padding-left:max(.6rem,calc((100vw - 654px)/2));
+    padding-right:max(.6rem,calc((100vw - 654px)/2));
+    padding-bottom:calc(.6rem + env(safe-area-inset-bottom));
+  }
+  footer output{
+    flex:1;min-width:0;
+    font-size:1.3rem;font-weight:700;color:var(--paars);
+    font-variant-numeric:tabular-nums;
+  }
+  footer output small{
+    display:block;font-size:.68rem;font-weight:600;
+    text-transform:uppercase;letter-spacing:.07em;color:var(--zacht);
+  }
+  footer button{
+    min-height:48px;
+    border:none;border-radius:12px;
+    padding:0 .95rem;
+    font:inherit;font-weight:600;
+    cursor:pointer;touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+  footer button[data-actie="wis"]{background:#efedf7;color:#4a4468;}
+  footer button[data-actie="afrekenen"]{background:var(--paars);color:#fff;}
+  footer button:disabled{opacity:.4;cursor:default;}
+  footer button:not(:disabled):active{transform:scale(.96);}
 
-    .header p {
-      opacity: 0.9;
-      font-size: 14px;
-    }
-
-    .menu-section {
-      padding: 20px;
-      border-bottom: 1px solid #eee;
-    }
-
-    .section-title {
-      font-size: 18px;
-      color: #333;
-      margin-bottom: 16px;
-      font-weight: 600;
-    }
-
-    .drinks-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 12px;
-    }
-
-    .drink-btn {
-      background: #f8f9fa;
-      border: 2px solid #e9ecef;
-      border-radius: 12px;
-      padding: 16px 12px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: left;
-    }
-
-    .drink-btn:hover {
-      background: #6d4aff;
-      border-color: #6d4aff;
-      color: white;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(109, 74, 255, 0.3);
-    }
-
-    .drink-btn:active {
-      transform: translateY(0);
-    }
-
-    .drink-name {
-      font-weight: 600;
-      font-size: 14px;
-      margin-bottom: 6px;
-    }
-
-    .drink-price {
-      font-size: 13px;
-      color: #666;
-    }
-
-    .drink-btn:hover .drink-price {
-      color: #e0e0e0;
-    }
-
-    .order-summary {
-      padding: 20px;
-      background: #f8f9fa;
-    }
-
-    .order-list {
-      list-style: none;
-      margin-bottom: 16px;
-      max-height: 150px;
-      overflow-y: auto;
-    }
-
-    .order-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #dee2e6;
-    }
-
-    .order-item:last-child {
-      border-bottom: none;
-    }
-
-    .item-name {
-      font-size: 14px;
-      color: #333;
-    }
-
-    .item-count {
-      background: #6d4aff;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      margin-left: 8px;
-    }
-
-    .item-price {
-      font-size: 14px;
-      color: #666;
-    }
-
-    .total-section {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 0;
-      border-top: 2px solid #ddd;
-    }
-
-    .total-label {
-      font-size: 20px;
-      font-weight: 700;
-      color: #333;
-    }
-
-    .total-amount {
-      font-size: 28px;
-      font-weight: 700;
-      color: #6d4aff;
-    }
-
-    .actions {
-      display: flex;
-      gap: 12px;
-      margin-top: 16px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-primary {
-      background: #6d4aff;
-      color: white;
-    }
-
-    .btn-primary:hover {
-      background: #5a45cc;
-      box-shadow: 0 4px 12px rgba(109, 74, 255, 0.4);
-    }
-
-    .btn-secondary {
-      background: #e9ecef;
-      color: #495057;
-    }
-
-    .btn-secondary:hover {
-      background: #dee2e6;
-    }
-
-    .empty-message {
-      color: #999;
-      text-align: center;
-      padding: 20px 0;
-      font-style: italic;
-    }
-  </style>
+  /* ---- dialoogvenster (bottom sheet) ---- */
+  dialog{
+    position:fixed;inset:auto 0 0 0;margin:0 auto;
+    width:100%;max-width:560px;max-height:82vh;
+    border:none;border-radius:20px 20px 0 0;
+    padding:1rem;
+    padding-bottom:calc(1rem + env(safe-area-inset-bottom));
+    background:#fff;color:var(--inkt);
+    box-shadow:0 -10px 40px rgba(27,22,48,.28);
+  }
+  dialog::backdrop{background:rgba(27,22,48,.45);}
+  dialog h2{margin:0 0 .75rem;font-size:1.05rem;}
+  dialog ul{margin:0;padding:0;list-style:none;overflow-y:auto;max-height:52vh;}
+  dialog li{
+    display:grid;grid-template-columns:1fr auto auto auto;
+    align-items:center;gap:.5rem;
+    padding:.5rem 0;border-bottom:1px solid #f0eef8;
+  }
+  dialog li:last-child{border-bottom:none;}
+  dialog li strong{display:block;font-size:.92rem;font-weight:600;}
+  dialog li small{font-size:.78rem;color:var(--zacht);}
+  dialog li b{min-width:1.5rem;text-align:center;font-variant-numeric:tabular-nums;}
+  dialog li button{
+    width:38px;height:38px;
+    border:2px solid var(--lijn);border-radius:10px;
+    background:#fff;color:var(--paars);
+    font:inherit;font-size:1.1rem;font-weight:700;line-height:1;
+    cursor:pointer;touch-action:manipulation;
+  }
+  dialog li button:active{background:#efeaff;}
+  dialog > p{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin:1rem 0;font-weight:700;
+  }
+  dialog > p span{color:var(--paars);font-size:1.3rem;font-variant-numeric:tabular-nums;}
+  dialog form{display:flex;gap:.6rem;}
+  dialog form button{
+    flex:1;min-height:50px;border:none;border-radius:12px;
+    font:inherit;font-weight:600;cursor:pointer;touch-action:manipulation;
+  }
+  dialog form button[value="sluit"]{background:#efedf7;color:#4a4468;}
+  dialog form button[value="bevestig"]{background:var(--paars);color:#fff;}
+  dialog form button:disabled{opacity:.4;}
+</style>
 </head>
 <body>
-  <!-- ========== HTML STRUCTURE ========== -->
-  <div class="container">
-    <div class="header">
-      <h1>🥤 Drink Order</h1>
-      <p>Select drinks to calculate your total</p>
-    </div>
 
-    <div class="menu-section">
-      <h2 class="section-title">Menu</h2>
-      <div class="drinks-grid" id="drinksGrid"></div>
-    </div>
+<header>
+  <h1>Drankjes &amp; snacks</h1>
+  <p>Tik op een item om het toe te voegen</p>
+</header>
 
-    <div class="order-summary">
-      <h2 class="section-title">Your Order</h2>
-      <ul class="order-list" id="orderList">
-        <li class="empty-message" id="emptyMessage">No drinks selected yet</li>
-      </ul>
+<main></main>
 
-      <div class="total-section">
-        <span class="total-label">Total</span>
-        <span class="total-amount" id="totalAmount">$0.00</span>
-      </div>
+<footer>
+  <output aria-live="polite"><small>Totaal</small>€ 0,00</output>
+  <button data-actie="wis" disabled>Wis</button>
+  <button data-actie="afrekenen" disabled>Bestelling</button>
+</footer>
 
-      <div class="actions">
-        <button class="btn btn-secondary" onclick="resetOrder()">Reset</button>
-        <button class="btn btn-primary" onclick="checkout()">Checkout</button>
-      </div>
-    </div>
-  </div>
+<dialog>
+  <h2>Jouw bestelling</h2>
+  <ul></ul>
+  <p>Totaal <span>€ 0,00</span></p>
+  <form method="dialog">
+    <button value="sluit">Terug</button>
+    <button value="bevestig">Bevestig</button>
+  </form>
+</dialog>
 
-  <script>
-    // ========== JAVASCRIPT LOGIC ==========
-    
-    // Drink menu data
-    const menu = [
-      { id: 1, name: "Coffee", price: 3.50 },
-      { id: 2, name: "Espresso", price: 2.50 },
-      { id: 3, name: "Latte", price: 4.50 },
-      { id: 4, name: "Cappuccino", price: 4.00 },
-      { id: 5, name: "Tea", price: 2.75 },
-      { id: 6, name: "Green Tea", price: 3.00 },
-      { id: 7, name: "Smoothie", price: 5.50 },
-      { id: 8, name: "Milkshake", price: 6.00 }
-    ];
+<script>
+const euro = new Intl.NumberFormat('nl-BE', { style:'currency', currency:'EUR' });
 
-    // Order state
-    let order = {};
+const kaart = [
+  { kop:'Water & fris', items:[
+    ['Waterfles (gymnast)', 1.5],
+    ['Water plat/bruis', 2],
+    ['Chocomelk koud', 2],
+    ['Fristi', 2],
+    ['Appelsap', 2],
+    ['Cola', 2.5],
+    ['Cola zero', 2.5],
+    ['Fanta', 2.5],
+    ['Ice-tea', 3],
+    ['Ice-tea zero', 3],
+    ['Ice-tea green', 3],
+    ['Tonic', 3],
+  ]},
+  { kop:'Bier', items:[
+    ['Jupiler', 2.5],
+    ['Jupiler 0%', 2.5],
+    ['Kriek', 3.5],
+    ['Kriek 0%', 3.5],
+    ['Vedett', 3.5],
+    ['Duvel', 4.5],
+    ['Duvel 666', 4.5],
+    ['Chouffe 0%', 4.5],
+    ['Westmalle dubbel', 4.5],
+    ['Westmalle tripel', 4.5],
+  ]},
+  { kop:'Wijn & bubbels', items:[
+    ['Witte wijn', 4],
+    ['Cava', 5],
+  ]},
+  { kop:'Warm', items:[
+    ['Koffie', 3],
+    ['Koffie deca', 3],
+    ['Thee', 3],
+    ['Chocomelk warm', 3],
+    ['Soep', 3],
+  ]},
+  { kop:'Snacks', items:[
+    ['Chips', 2.5],
+    ['Wafel', 2.5],
+  ]},
+];
 
-    // Initialize the page
-    function init() {
-      renderMenu();
-    }
+/* platte opzoektabel: id -> { naam, prijs } */
+const dranken = {};
+for (const [g, groep] of kaart.entries())
+  for (const [i, [naam, prijs]] of groep.items.entries())
+    dranken[g + '-' + i] = { naam, prijs };
 
-    // Render drink buttons
-    function renderMenu() {
-      const grid = document.getElementById('drinksGrid');
-      grid.innerHTML = menu.map(drink => `
-        <button class="drink-btn" onclick="addToOrder(${drink.id})">
-          <div class="drink-name">${drink.name}</div>
-          <div class="drink-price">$${drink.price.toFixed(2)}</div>
-        </button>
-      `).join('');
-    }
+const aantal = {};                                   /* id -> aantal */
+const main        = document.querySelector('main');
+const voettekst   = document.querySelector('body > footer');
+const uitvoer     = voettekst.querySelector('output');
+const wisKnop     = voettekst.querySelector('[data-actie="wis"]');
+const bestelKnop  = voettekst.querySelector('[data-actie="afrekenen"]');
+const dialoog     = document.querySelector('dialog');
+const dialoogLijst= dialoog.querySelector('ul');
+const dialoogSom  = dialoog.querySelector('p span');
+const bevestigKnop= dialoog.querySelector('button[value="bevestig"]');
 
-    // Add item to order
-    function addToOrder(id) {
-      const drink = menu.find(d => d.id === id);
-      if (drink) {
-        order[id] = (order[id] || 0) + 1;
-        updateSummary();
-      }
-    }
+/* menu opbouwen uit de kaart */
+main.innerHTML = kaart.map((groep, g) => `
+  <section>
+    <h2>${groep.kop}</h2>
+    <menu>
+      ${groep.items.map(([naam, prijs], i) =>
+        `<li><button data-id="${g}-${i}" data-aantal="0"
+                     aria-label="${naam}, ${euro.format(prijs)}">
+           <strong>${naam}</strong><small>${euro.format(prijs)}</small>
+         </button></li>`).join('')}
+    </menu>
+  </section>`).join('');
 
-    // Update order summary display
-    function updateSummary() {
-      const orderList = document.getElementById('orderList');
-      const emptyMessage = document.getElementById('emptyMessage');
-      
-      const items = Object.entries(order);
-      
-      if (items.length === 0) {
-        orderList.innerHTML = '<li class="empty-message" id="emptyMessage">No drinks selected yet</li>';
-        document.getElementById('totalAmount').textContent = '$0.00';
-        return;
-      }
+const totaal = () =>
+  Object.entries(aantal).reduce((som, [id, n]) => som + dranken[id].prijs * n, 0);
 
-      // Hide empty message
-      if (emptyMessage) emptyMessage.style.display = 'none';
-      
-      // Build order list
-      orderList.innerHTML = items.map(([id, count]) => {
-        const drink = menu.find(d => d.id === parseInt(id));
-        return `
-          <li class="order-item">
-            <div>
-              <span class="item-name">${drink.name}</span>
-              <span class="item-count">${count}</span>
-            </div>
-            <span class="item-price">$${(drink.price * count).toFixed(2)}</span>
-          </li>
-        `;
-      }).join('');
+const regels = () => Object.entries(aantal).filter(([, n]) => n > 0);
 
-      // Calculate and update total
-      const total = items.reduce((sum, [id, count]) => {
-        const drink = menu.find(d => d.id === parseInt(id));
-        return sum + (drink.price * count);
-      }, 0);
+function teken(){
+  const t = totaal();
+  const leeg = regels().length === 0;
 
-      document.getElementById('totalAmount').textContent = `$${total.toFixed(2)}`;
-    }
+  for (const knop of main.querySelectorAll('button[data-id]'))
+    knop.dataset.aantal = aantal[knop.dataset.id] || 0;
 
-    // Reset the entire order
-    function resetOrder() {
-      order = {};
-      updateSummary();
-    }
+  uitvoer.innerHTML = `<small>Totaal</small>${euro.format(t)}`;
+  wisKnop.disabled = leeg;
+  bestelKnop.disabled = leeg;
 
-    // Checkout (show confirmation)
-    function checkout() {
-      const items = Object.entries(order);
-      if (items.length === 0) {
-        alert('Your order is empty! Please select some drinks.');
-        return;
-      }
+  dialoogLijst.innerHTML = regels().map(([id, n]) => {
+    const d = dranken[id];
+    return `<li>
+      <span><strong>${d.naam}</strong>
+      <small>${euro.format(d.prijs)} × ${n} = ${euro.format(d.prijs * n)}</small></span>
+      <button data-min="${id}" aria-label="Minder ${d.naam}">−</button>
+      <b>${n}</b>
+      <button data-plus="${id}" aria-label="Meer ${d.naam}">+</button>
+    </li>`;
+  }).join('');
 
-      const total = items.reduce((sum, [id, count]) => {
-        const drink = menu.find(d => d.id === parseInt(id));
-        return sum + (drink.price * count);
-      }, 0);
+  dialoogSom.textContent = euro.format(t);
+  bevestigKnop.disabled = leeg;
+}
 
-      const orderSummary = items.map(([id, count]) => {
-        const drink = menu.find(d => d.id === parseInt(id));
-        return `${count}x ${drink.name} ($${(drink.price * count).toFixed(2)})`;
-      }).join('\n');
+function wijzig(id, delta){
+  const nieuw = Math.max(0, (aantal[id] || 0) + delta);
+  if (nieuw === 0) delete aantal[id]; else aantal[id] = nieuw;
+  if (delta > 0 && navigator.vibrate) navigator.vibrate(8);
+  teken();
+}
 
-      alert(`🧾 ORDER CONFIRMED\n\n${orderSummary}\n\n💰 Total: $${total.toFixed(2)}\n\nThank you for your order!`);
-      resetOrder();
-    }
+/* tikken op het menu */
+main.addEventListener('click', e => {
+  const knop = e.target.closest('button[data-id]');
+  if (knop) wijzig(knop.dataset.id, 1);
+});
 
-    // Initialize when DOM is ready
-    document.addEventListener('DOMContentLoaded', init);
-  </script>
+/* +/- binnen het dialoogvenster */
+dialoogLijst.addEventListener('click', e => {
+  const knop = e.target.closest('button');
+  if (!knop) return;
+  if (knop.dataset.plus) wijzig(knop.dataset.plus, 1);
+  if (knop.dataset.min)  wijzig(knop.dataset.min, -1);
+});
+
+wisKnop.addEventListener('click', () => {
+  for (const id in aantal) delete aantal[id];
+  teken();
+});
+
+bestelKnop.addEventListener('click', () => {
+  dialoog.returnValue = '';
+  dialoog.showModal();
+});
+
+dialoog.addEventListener('close', () => {
+  if (dialoog.returnValue !== 'bevestig') return;
+  const tekst = regels()
+    .map(([id, n]) => `${n}× ${dranken[id].naam}`)
+    .join('\n');
+  alert(`Bestelling:\n\n${tekst}\n\nTotaal: ${euro.format(totaal())}`);
+  for (const id in aantal) delete aantal[id];
+  teken();
+});
+
+teken();
+</script>
 </body>
 </html>
