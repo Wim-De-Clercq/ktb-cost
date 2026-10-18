@@ -112,10 +112,61 @@ function wijzig(id, delta){
   teken();
 }
 
+/* lang ingedrukt houden op een item = 1x verwijderen */
+const HOUD_MS = 500;        /* hoe lang ingedrukt houden */
+const MAX_BEWEGING = 10;    /* px: meer bewegen = scrollen, geen long-press */
+let houdTimer = null;
+let startX = 0, startY = 0;
+let negeerKlik = false;     /* klik na een long-press niet als +1 tellen */
+let houdKnop = null;        /* knop die nu aan het vullen is */
+main.style.setProperty('--houd', HOUD_MS + 'ms');   /* animatieduur = HOUD_MS */
+
+function stopHouden(){
+  clearTimeout(houdTimer);
+  houdTimer = null;
+  if (houdKnop) houdKnop.classList.remove('houdt');
+  houdKnop = null;
+}
+
+main.addEventListener('pointerdown', e => {
+  const knop = e.target.closest('button[data-id]');
+  if (!knop || e.button !== 0) return;
+  negeerKlik = false;
+  startX = e.clientX; startY = e.clientY;
+  stopHouden();
+  const id = knop.dataset.id;
+  if (aantal[id]) {                         /* alleen vullen als er iets te verwijderen is */
+    houdKnop = knop;
+    knop.classList.add('houdt');
+  }
+  houdTimer = setTimeout(() => {
+    negeerKlik = true;
+    stopHouden();
+    if (aantal[id]) {
+      wijzig(id, -1);
+      if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
+    }
+  }, HOUD_MS);
+});
+
+main.addEventListener('pointermove', e => {
+  if (houdTimer && Math.hypot(e.clientX - startX, e.clientY - startY) > MAX_BEWEGING)
+    stopHouden();
+});
+for (const type of ['pointerup', 'pointercancel', 'pointerleave'])
+  main.addEventListener(type, stopHouden);
+
+/* geen contextmenu / 'kopiëren'-popup bij lang drukken */
+main.addEventListener('contextmenu', e => {
+  if (e.target.closest('button[data-id]')) e.preventDefault();
+});
+
 /* tikken op het menu */
 main.addEventListener('click', e => {
   const knop = e.target.closest('button[data-id]');
-  if (knop) wijzig(knop.dataset.id, 1);
+  if (!knop) return;
+  if (negeerKlik) { negeerKlik = false; return; }
+  wijzig(knop.dataset.id, 1);
 });
 
 /* +/- binnen het dialoogvenster */
@@ -134,6 +185,15 @@ wisKnop.addEventListener('click', () => {
 bestelKnop.addEventListener('click', () => {
   dialoog.returnValue = '';
   dialoog.showModal();
+});
+
+/* klik buiten het venster (op de achtergrond) = sluiten */
+dialoog.addEventListener('click', e => {
+  if (e.target !== dialoog) return;          /* klik op inhoud van het venster */
+  const r = dialoog.getBoundingClientRect();
+  const binnen = e.clientX >= r.left && e.clientX <= r.right &&
+                 e.clientY >= r.top  && e.clientY <= r.bottom;
+  if (!binnen) dialoog.close('sluit');
 });
 
 dialoog.addEventListener('close', () => {

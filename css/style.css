@@ -56,8 +56,27 @@
     cursor:pointer;
     touch-action:manipulation;
     -webkit-tap-highlight-color:transparent;
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;user-select:none;
     transition:background .15s,border-color .15s,transform .08s;
   }
+  /* long-press: knop vult zich van rechts naar links */
+  menu button::before{
+    content:"";
+    position:absolute;inset:0;
+    border-radius:inherit;
+    background:rgba(220,53,90,.82);
+    transform:scaleX(0);
+    transform-origin:right;
+    transition:transform .15s ease-out;   /* snel terug bij loslaten */
+    pointer-events:none;
+  }
+  menu button.houdt::before{
+    transform:scaleX(1);
+    transition:transform var(--houd,500ms) linear;
+  }
+  menu button strong,
+  menu button small{position:relative;}   /* tekst boven de vulling */
   menu button strong{font-size:.92rem;font-weight:600;line-height:1.2;}
   menu button small{font-size:.82rem;color:var(--zacht);}
   menu button:active{transform:scale(.97);}
