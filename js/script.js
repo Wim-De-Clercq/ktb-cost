@@ -101,13 +101,28 @@ nav.innerHTML = kaart.map((groep, g) => `<a href="#cat-${g}">${groep.kort}</a>`)
 const secties = [...main.querySelectorAll('section')];
 const navLinks = [...nav.querySelectorAll('a')];
 
+/* aangetikte categorie blijft gemarkeerd, ook als de pagina niet ver genoeg kan
+   scrollen om ze bovenaan te krijgen; zelf scrollen geeft de markering weer vrij */
+let gekozen = null;
+nav.addEventListener('click', e => {
+  const a = e.target.closest('a');
+  if (!a) return;
+  gekozen = navLinks.indexOf(a);
+  markeerCategorie();
+});
+for (const type of ['touchstart', 'wheel', 'keydown'])
+  addEventListener(type, e => { if (!nav.contains(e.target)) gekozen = null; }, { passive:true });
+
 /* actieve categorie markeren: de laatste sectie waarvan de top onder de balk zit */
 function markeerCategorie(){
-  const grens = nav.getBoundingClientRect().bottom + 12;
-  const onderaan = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
-  let actief = 0;
-  secties.forEach((s, i) => { if (s.getBoundingClientRect().top <= grens) actief = i; });
-  if (onderaan) actief = secties.length - 1;   /* korte laatste sectie haalt de top nooit */
+  let actief = gekozen;
+  if (actief === null) {
+    const grens = nav.getBoundingClientRect().bottom + 12;
+    const onderaan = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
+    actief = 0;
+    secties.forEach((s, i) => { if (s.getBoundingClientRect().top <= grens) actief = i; });
+    if (onderaan) actief = secties.length - 1;   /* korte laatste sectie haalt de top nooit */
+  }
   navLinks.forEach((a, i) => a.toggleAttribute('aria-current', i === actief));
 }
 addEventListener('scroll', markeerCategorie, { passive:true });
