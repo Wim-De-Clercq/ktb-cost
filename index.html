@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#4469b7">
 <title>Bestelling drankjes</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Drankjes">
 <link rel="stylesheet" href="css/style.css">
 <script src="js/script.js" defer></script>
 
@@ -13,25 +17,23 @@
 
 <header>
   <h1>Drankjes &amp; snacks</h1>
-  <p>Tik op een item om het toe te voegen, houd ingedrukt om er één te verwijderen</p>
+  <p>Tik = toevoegen · ingedrukt houden = verwijderen</p>
 </header>
+
+<nav aria-label="Categorieën"></nav>
 
 <main></main>
 
 <footer>
   <output aria-live="polite"><small>Totaal</small>€ 0,00</output>
   <button data-actie="wis" disabled>Wis</button>
-  <button data-actie="afrekenen" disabled>Bestelling</button>
+  <button data-actie="overzicht" disabled>Overzicht</button>
 </footer>
 
 <dialog>
-  <h2>Jouw bestelling</h2>
+  <h2>Overzicht</h2>
   <ul></ul>
   <p>Totaal <span>€ 0,00</span></p>
-  <form method="dialog">
-    <button value="sluit">Terug</button>
-    <button value="bevestig">Bevestig</button>
-  </form>
 </dialog>
 
 </body>

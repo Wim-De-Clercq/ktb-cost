@@ -8,7 +8,7 @@
     --achtergrond:#f2f5fb;
   }
   *{box-sizing:border-box;}
-  html{-webkit-text-size-adjust:100%;}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
   body{
     margin:0;
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -26,9 +26,34 @@
   header h1{margin:0;font-size:1rem;color:var(--basis);}
   header p{margin:.1rem 0 0;font-size:.75rem;color:var(--zacht);}
 
+  /* ---- categoriebalk (sticky) ---- */
+  nav{
+    position:sticky;top:0;z-index:2;
+    display:flex;gap:.4rem;
+    overflow-x:auto;scrollbar-width:none;
+    background:var(--achtergrond);
+    padding:.45rem .75rem;
+    padding-top:max(.45rem, env(safe-area-inset-top));
+    padding-left:max(.75rem, calc((100vw - 640px)/2 + .75rem));
+    padding-right:max(.75rem, calc((100vw - 640px)/2 + .75rem));
+    border-bottom:1px solid var(--lijn);
+  }
+  nav::-webkit-scrollbar{display:none;}
+  nav a{
+    flex:none;
+    display:grid;place-items:center;
+    min-height:36px;padding:0 .9rem;
+    border:2px solid var(--lijn);border-radius:999px;
+    background:var(--kaart);color:var(--inkt);
+    font-size:.88rem;font-weight:600;text-decoration:none;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s,border-color .15s,color .15s;
+  }
+  nav a[aria-current]{background:var(--basis);border-color:var(--basis);color:#fff;}
+
   /* ---- menu ---- */
-  main{max-width:640px;margin:0 auto;padding:.6rem .75rem 1.5rem;}
-  section{margin-bottom:1.6rem;}
+  main{max-width:640px;margin:0 auto;padding:.8rem .75rem 1.5rem;}
+  section{margin-bottom:1.6rem;scroll-margin-top:3.6rem;}   /* niet onder de balk springen */
   /* categorietitel met een lijn die de rest van de breedte vult */
   section h2{
     display:flex;align-items:center;gap:.6rem;
@@ -171,8 +196,26 @@
     cursor:pointer;touch-action:manipulation;
     -webkit-tap-highlight-color:transparent;
   }
-  footer button[data-actie="wis"]{background:#eceff6;color:#44506a;}
-  footer button[data-actie="afrekenen"]{background:var(--basis);color:#fff;}
+  footer button[data-actie="overzicht"]{background:var(--basis);color:#fff;}
+  footer button[data-actie="wis"]{
+    position:relative;isolation:isolate;overflow:hidden;
+    background:#eceff6;color:#44506a;
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;user-select:none;
+  }
+  /* long-press op Wis: zelfde vulling als de items, achter de tekst */
+  footer button[data-actie="wis"]::before{
+    content:"";
+    position:absolute;inset:0;z-index:-1;
+    background:rgba(220,53,90,.82);
+    transform:scaleX(0);
+    transform-origin:right;
+    transition:transform .15s ease-out;
+  }
+  footer button[data-actie="wis"].houdt::before{
+    transform:scaleX(1);
+    transition:transform var(--houd,800ms) linear;
+  }
   footer button:disabled{opacity:.4;cursor:default;}
   footer button:not(:disabled):active{transform:scale(.96);}
 
@@ -187,6 +230,12 @@
     box-shadow:0 -10px 40px rgba(23,32,51,.28);
   }
   dialog::backdrop{background:rgba(23,32,51,.45);}
+  /* greepje bovenaan: hint dat het een sheet is (sluiten = tik ernaast) */
+  dialog::before{
+    content:"";display:block;
+    width:40px;height:4px;margin:-.4rem auto .7rem;
+    border-radius:4px;background:var(--lijn);
+  }
   dialog h2{margin:0 0 .75rem;font-size:1.05rem;}
   dialog ul{margin:0;padding:0;list-style:none;overflow-y:auto;max-height:52vh;}
   dialog li{
@@ -208,14 +257,7 @@
   dialog li button:active{background:#e7eef9;}
   dialog > p{
     display:flex;justify-content:space-between;align-items:baseline;
-    margin:1rem 0;font-weight:700;
+    margin:1rem 0 0;padding-top:.75rem;border-top:2px solid var(--lijn);
+    font-weight:700;
   }
   dialog > p span{color:var(--basis);font-size:1.3rem;font-variant-numeric:tabular-nums;}
-  dialog form{display:flex;gap:.6rem;}
-  dialog form button{
-    flex:1;min-height:50px;border:none;border-radius:12px;
-    font:inherit;font-weight:600;cursor:pointer;touch-action:manipulation;
-  }
-  dialog form button[value="sluit"]{background:#eceff6;color:#44506a;}
-  dialog form button[value="bevestig"]{background:var(--basis);color:#fff;}
-  dialog form button:disabled{opacity:.4;}

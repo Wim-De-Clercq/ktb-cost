@@ -1,7 +1,8 @@
 const euro = new Intl.NumberFormat('nl-BE', { style:'currency', currency:'EUR' });
 
 const kaart = [
-  { kop:'Water & fris', items:[
+  /* kort = label in de categoriebalk bovenaan */
+  { kop:'Water & fris', kort:'Fris', items:[
     ['Waterfles (gymnast)', 1.5],
     ['Water plat/bruis', 2],
     ['Chocomelk koud', 2],
@@ -12,7 +13,7 @@ const kaart = [
     ['Ice-tea', 3, ['Gewoon', 'Zero', 'Green']],
     ['Tonic', 3],
   ]},
-  { kop:'Bier', items:[
+  { kop:'Bier', kort:'Bier', items:[
     ['Jupiler', 2.5, ['Gewoon', '0%']],
     ['Kriek', 3.5, ['Gewoon', '0%']],
     ['Vedett', 3.5],
@@ -20,17 +21,17 @@ const kaart = [
     ['Chouffe 0%', 4.5],
     ['Westmalle', 4.5, ['Dubbel', 'Tripel']],
   ]},
-  { kop:'Wijn & bubbels', items:[
+  { kop:'Wijn & bubbels', kort:'Wijn', items:[
     ['Witte wijn', 4],
     ['Cava', 5],
   ]},
-  { kop:'Warm', items:[
+  { kop:'Warm', kort:'Warm', items:[
     ['Koffie', 3, ['Gewoon', 'Deca']],
     ['Thee', 3],
     ['Chocomelk warm', 3],
     ['Soep', 3],
   ]},
-  { kop:'Snacks', items:[
+  { kop:'Snacks', kort:'Snacks', items:[
     ['Chips', 2.5],
     ['Wafel', 2.5],
   ]},
@@ -56,14 +57,14 @@ for (const [g, groep] of kaart.entries())
 
 const aantal = {};                                   /* id -> aantal */
 const main        = document.querySelector('main');
+const nav         = document.querySelector('nav');
 const voettekst   = document.querySelector('body > footer');
 const uitvoer     = voettekst.querySelector('output');
 const wisKnop     = voettekst.querySelector('[data-actie="wis"]');
-const bestelKnop  = voettekst.querySelector('[data-actie="afrekenen"]');
+const overzichtKnop = voettekst.querySelector('[data-actie="overzicht"]');
 const dialoog     = document.querySelector('dialog');
 const dialoogLijst= dialoog.querySelector('ul');
 const dialoogSom  = dialoog.querySelector('p span');
-const bevestigKnop= dialoog.querySelector('button[value="bevestig"]');
 
 /* gewoon item: één knop met naam en prijs */
 const itemHtml = (id, naam, prijs) => `
@@ -86,7 +87,7 @@ const familieHtml = (id, naam, prijs, varianten) => `
 
 /* menu opbouwen uit de kaart */
 main.innerHTML = kaart.map((groep, g) => `
-  <section>
+  <section id="cat-${g}">
     <h2>${groep.kop}</h2>
     <menu>
     ${groep.items.map(([naam, prijs, varianten], i) => varianten
@@ -94,6 +95,23 @@ main.innerHTML = kaart.map((groep, g) => `
         : itemHtml(`${g}-${i}`, naam, prijs)).join('')}
     </menu>
   </section>`).join('');
+
+/* categoriebalk: springt naar de sectie (smooth scroll + offset via CSS) */
+nav.innerHTML = kaart.map((groep, g) => `<a href="#cat-${g}">${groep.kort}</a>`).join('');
+const secties = [...main.querySelectorAll('section')];
+const navLinks = [...nav.querySelectorAll('a')];
+
+/* actieve categorie markeren: de laatste sectie waarvan de top onder de balk zit */
+function markeerCategorie(){
+  const grens = nav.getBoundingClientRect().bottom + 12;
+  const onderaan = innerHeight + scrollY >= document.documentElement.scrollHeight - 2;
+  let actief = 0;
+  secties.forEach((s, i) => { if (s.getBoundingClientRect().top <= grens) actief = i; });
+  if (onderaan) actief = secties.length - 1;   /* korte laatste sectie haalt de top nooit */
+  navLinks.forEach((a, i) => a.toggleAttribute('aria-current', i === actief));
+}
+addEventListener('scroll', markeerCategorie, { passive:true });
+markeerCategorie();
 
 const totaal = () =>
   Object.entries(aantal).reduce((som, [id, n]) => som + dranken[id].prijs * n, 0);
@@ -109,7 +127,7 @@ function teken(){
 
   uitvoer.innerHTML = `<small>Totaal</small>${euro.format(t)}`;
   wisKnop.disabled = leeg;
-  bestelKnop.disabled = leeg;
+  overzichtKnop.disabled = leeg;
 
   dialoogLijst.innerHTML = regels().map(([id, n]) => {
     const d = dranken[id];
@@ -123,7 +141,7 @@ function teken(){
   }).join('');
 
   dialoogSom.textContent = euro.format(t);
-  bevestigKnop.disabled = leeg;
+  if (leeg && dialoog.open) dialoog.close();   /* laatste item weg: overzicht sluiten */
 }
 
 function wijzig(id, delta){
@@ -205,15 +223,43 @@ dialoogLijst.addEventListener('click', e => {
   if (knop.dataset.min)  wijzig(knop.dataset.min, -1);
 });
 
+/* Wis: lang ingedrukt houden wist de hele bestelling; kort tikken toont een hint */
+const WIS_MS = 800;
+let wisTimer = null;
+let gewist = false;         /* klik na het wissen niet als 'kort tikken' zien */
+let hintTimer = null;
+wisKnop.style.setProperty('--houd', WIS_MS + 'ms');
+
+function stopWis(){
+  clearTimeout(wisTimer);
+  wisTimer = null;
+  wisKnop.classList.remove('houdt');
+}
+
+wisKnop.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  gewist = false;
+  wisKnop.classList.add('houdt');
+  wisTimer = setTimeout(() => {
+    gewist = true;
+    stopWis();
+    for (const id in aantal) delete aantal[id];
+    if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
+    teken();
+  }, WIS_MS);
+});
+for (const type of ['pointerup', 'pointercancel', 'pointerleave'])
+  wisKnop.addEventListener(type, stopWis);
+wisKnop.addEventListener('contextmenu', e => e.preventDefault());
+
 wisKnop.addEventListener('click', () => {
-  for (const id in aantal) delete aantal[id];
-  teken();
+  if (gewist) { gewist = false; return; }
+  wisKnop.textContent = 'Houd ingedrukt';
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => { wisKnop.textContent = 'Wis'; }, 1500);
 });
 
-bestelKnop.addEventListener('click', () => {
-  dialoog.returnValue = '';
-  dialoog.showModal();
-});
+overzichtKnop.addEventListener('click', () => dialoog.showModal());
 
 /* klik buiten het venster (op de achtergrond) = sluiten */
 dialoog.addEventListener('click', e => {
@@ -221,17 +267,20 @@ dialoog.addEventListener('click', e => {
   const r = dialoog.getBoundingClientRect();
   const binnen = e.clientX >= r.left && e.clientX <= r.right &&
                  e.clientY >= r.top  && e.clientY <= r.bottom;
-  if (!binnen) dialoog.close('sluit');
-});
-
-dialoog.addEventListener('close', () => {
-  if (dialoog.returnValue !== 'bevestig') return;
-  const tekst = regels()
-    .map(([id, n]) => `${n}× ${dranken[id].naam}`)
-    .join('\n');
-  alert(`Bestelling:\n\n${tekst}\n\nTotaal: ${euro.format(totaal())}`);
-  for (const id in aantal) delete aantal[id];
-  teken();
+  if (!binnen) dialoog.close();
 });
 
 teken();
+
+/* altijd verse bestanden (zie sw.js): omzeilt de 10 min cache van GitHub Pages */
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+/* geïnstalleerde app blijft soms uren in het geheugen staan: na lang op de
+   achtergrond herladen voor de laatste prijzen, maar nooit midden in een bestelling */
+const HERLAAD_NA_MS = 30 * 60 * 1000;
+let verborgenSinds = 0;
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { verborgenSinds = Date.now(); return; }
+  if (verborgenSinds && Date.now() - verborgenSinds > HERLAAD_NA_MS && !regels().length)
+    location.reload();
+});

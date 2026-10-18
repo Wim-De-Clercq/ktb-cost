@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- achtergrond: volle vlakte zodat het ook als 'maskable' icoon werkt -->
+  <rect width="512" height="512" fill="#4469b7"/>
+  <!-- glas met bier, binnen de veilige zone (middelste 80%) -->
+  <g transform="translate(0 16)">
+    <path d="M180 196 H332 L318 384 Q316 404 294 404 H218 Q196 404 194 384 Z" fill="#f2b632"/>
+    <path d="M172 150 H340 L320 384 Q318 408 294 408 H218 Q194 408 192 384 Z"
+          fill="none" stroke="#fff" stroke-width="16" stroke-linejoin="round"/>
+    <!-- schuimkraag -->
+    <g fill="#fff">
+      <rect x="172" y="150" width="168" height="50"/>
+      <circle cx="198" cy="148" r="34"/>
+      <circle cx="252" cy="134" r="40"/>
+      <circle cx="310" cy="148" r="34"/>
+    </g>
+    <!-- belletjes -->
+    <g fill="#fff" opacity=".55">
+      <circle cx="232" cy="270" r="7"/>
+      <circle cx="276" cy="320" r="6"/>
+      <circle cx="250" cy="350" r="5"/>
+    </g>
+  </g>
+</svg>
