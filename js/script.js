@@ -7,42 +7,46 @@ const kaart = [
     ['Chocomelk koud', 2, '#613419'],
     ['Fristi', 2, '#f7c3dc'],
     ['Appelsap', 2, '#debb01'],
-    ['Cola', 2.5, '#F40009'],
+    ['Cola', 2.5, '#F40009', '#f7f7f7'],
     ['Cola zero', 2.5, '#F40009', 'rgb(7, 4, 0)'],
     ['Fanta', 2.5, '#FF8300'],
-    ['Ice-tea', 3, '#0236f0', '#e1c601', { tekst:'#f7f6f6' }],
-    ['Ice-tea zero', 3, '#0236f0', '#e1c601', { tekst:'#f7f6f6' }],
-    ['Ice-tea green', 3, '#0236f0', '#e1c601', 'rgb(0, 255, 64)', { tekst:'#f7f6f6' }],
+    ['Ice-tea', 3, '#0236f0', '#e1c601'],
+    ['Ice-tea zero', 3, '#0236f0', '#e1c601', 'rgb(7, 4, 0)'],
+    ['Ice-tea green', 3, '#0236f0', '#e1c601', 'rgb(0, 255, 64)'],
     ['Tonic', 3, '#f8d866'],
   ]},
   { kop:'Bier', items:[
-    ['Jupiler', 2.5, 'rgb(255, 0, 0)'],
-    ['Jupiler 0%', 2.5, 'rgb(253, 0, 0)'],
-    ['Kriek', 3.5, 'rgb(138, 0, 0)'],
-    ['Kriek 0%', 3.5, 'rgb(138, 0, 0)'],
+    ['Jupiler', 2.5, 'rgb(255, 0, 0)', '#efb13a', '#0a0a0a'],
+    ['Jupiler 0%', 2.5, 'rgb(255, 0, 0)', '#efb13a', '#0a0a0a', '#f7f6f6'],
+    ['Kriek', 3.5, '#8a0026', '#d8b46a'],
+    ['Kriek 0%', 3.5, '#8a0026', '#d8b46a', '#f7f6f6'],
     ['Vedett', 3.5, '#f7f7f7', '#0a0a0a', '#e72625'],
-    ['Duvel', 4.5, 'rgb(105, 63, 0)'],
-    ['Duvel 666', 4.5, 'rgb(105, 63, 0)'],
-    ['Chouffe 0%', 4.5, 'rgb(105, 63, 0)'],
-    ['Westmalle dubbel', 4.5, 'rgb(105, 63, 0)'],
-    ['Westmalle tripel', 4.5, 'rgb(105, 63, 0)'],
+    ['Duvel', 4.5, '#f7f6f6', '#d6001c'],
+    ['Duvel 666', 4.5, '#f7f6f6', '#d6001c', '#e9b949' ],
+    ['Chouffe 0%', 4.5, '#d2232a', '#f2e6c9', '#1d5fa8'],
+    ['Westmalle dubbel', 4.5, '#5b2a17', '#c9a55c'],
+    ['Westmalle tripel', 4.5, '#f3ead2', '#c9a55c'],
   ]},
   { kop:'Wijn & bubbels', items:[
-    ['Witte wijn', 4, 'rgb(105, 63, 0)'],
-    ['Cava', 5, 'rgb(105, 63, 0)'],
+    ['Witte wijn', 4, '#f1e7a8'],
+    ['Cava', 5, '#e3c66d', '#1a1a1a'],
   ]},
   { kop:'Warm', items:[
-    ['Koffie', 3, 'rgb(105, 63, 0)'],
-    ['Koffie deca', 3, 'rgb(105, 63, 0)'],
-    ['Thee', 3, 'rgb(105, 63, 0)'],
-    ['Chocomelk warm', 3, 'rgb(105, 63, 0)'],
-    ['Soep', 3, 'rgb(105, 63, 0)'],
+    ['Koffie', 3, '#4b2e1f'],
+    ['Koffie deca', 3, '#4b2e1f', '#f28c28'],
+    ['Thee', 3, '#6f8f3a'],
+    ['Chocomelk warm', 3, '#613419', '#f3e6d0'],
+    ['Soep', 3, '#d4541f'],
   ]},
   { kop:'Snacks', items:[
-    ['Chips', 2.5, 'rgb(105, 63, 0)'],
-    ['Wafel', 2.5, 'rgb(105, 63, 0)'],
+    ['Chips', 2.5, '#ffd200', '#e2001a'],
+    ['Wafel', 2.5, '#d9a441', '#4b2e1f'],
   ]},
 ];
+
+/* binnen elke categorie alfabetisch (vóór de ids worden toegekend) */
+for (const groep of kaart)
+  groep.items.sort(([a], [b]) => a.localeCompare(b, 'nl', { sensitivity:'base' }));
 
 /* platte opzoektabel: id -> { naam, prijs } */
 const dranken = {};
@@ -81,7 +85,7 @@ function luminantie(kleur){
 function tekstKleur(luminanties){
   const metWit    = Math.min(...luminanties.map(L => 1.05 / (L + 0.05)));
   const metDonker = Math.min(...luminanties.map(L => (L + 0.05) / 0.061));
-  return metWit > metDonker ? '#fff' : '#1b1630';
+  return metWit > metDonker ? '#fff' : '#172033';
 }
 
 /* achtergrond: 1 kleur = effen, 2 = brede + smalle streep, 3+ = gelijke strepen */
@@ -98,17 +102,14 @@ function achtergrond(kleuren){
   return `repeating-linear-gradient(45deg, ${stops})`;
 }
 
-function kleurStijl(kleuren, opties = {}){
+function kleurStijl(kleuren){
   if (!kleuren.length) return '';
   const lum = kleuren.map(luminantie);
   if (lum.includes(null)) return '';                  /* ongeldige kleur: standaard look */
-  /* tekstkleur: zelf opgegeven (en geldig) of automatisch */
-  const eigen = opties.tekst && luminantie(opties.tekst) !== null;
-  const tekst = eigen ? opties.tekst : tekstKleur(lum);
+  const tekst = tekstKleur(lum);
   /* halo tegengesteld aan de tekst: lichte tekst -> donkere halo en omgekeerd */
   const halo  = luminantie(tekst) > 0.179 ? 'rgba(0,0,0,1)' : 'rgba(255,255,255,1)';
-  const klasse = kleuren.length > 1 ? 'gekleurd gestreept' : 'gekleurd';
-  return ` class="${klasse}" style="--kleur:${achtergrond(kleuren)};--tekst:${tekst};--halo:${halo}"`;
+  return ` class="gekleurd" style="--kleur:${achtergrond(kleuren)};--tekst:${tekst};--halo:${halo}"`;
 }
 
 /* menu opbouwen uit de kaart */
@@ -116,14 +117,11 @@ main.innerHTML = kaart.map((groep, g) => `
   <section>
     <h2>${groep.kop}</h2>
     <menu>
-    ${groep.items.map(([naam, prijs, ...kleuren], i) => {
-        /* optioneel object op het einde, bv. { tekst:'#000' } */
-        const opties = kleuren.at(-1) && typeof kleuren.at(-1) === 'object' ? kleuren.pop() : {};
-        return `<li><button data-id="${g}-${i}" data-aantal="0"${kleurStijl(kleuren, opties)}
+    ${groep.items.map(([naam, prijs, ...kleuren], i) => `
+        <li><button data-id="${g}-${i}" data-aantal="0"${kleurStijl(kleuren)}
                      aria-label="${naam}, ${euro.format(prijs)}">
            <strong>${naam}</strong><small>${euro.format(prijs)}</small>
-         </button></li>`;
-      }).join('')}
+         </button></li>`).join('')}
     </menu>
   </section>`).join('');
 
@@ -187,6 +185,7 @@ main.addEventListener('pointerdown', e => {
   negeerKlik = false;
   startX = e.clientX; startY = e.clientY;
   stopHouden();
+  knop.classList.remove('verwijderd');      /* vorige animatie nog bezig: afbreken */
   const id = knop.dataset.id;
   if (aantal[id]) {                         /* alleen vullen als er iets te verwijderen is */
     houdKnop = knop;
@@ -198,6 +197,9 @@ main.addEventListener('pointerdown', e => {
     if (aantal[id]) {
       wijzig(id, -1);
       if (navigator.vibrate) navigator.vibrate([15, 40, 15]);
+      /* korte 'tik' + vulling vervaagt; in dezelfde tick als het weghalen
+         van 'houdt', zodat de terugtrek-transitie nooit start */
+      knop.classList.add('verwijderd');
     }
   }, HOUD_MS);
 });
@@ -208,6 +210,9 @@ main.addEventListener('pointermove', e => {
 });
 for (const type of ['pointerup', 'pointercancel', 'pointerleave'])
   main.addEventListener(type, stopHouden);
+main.addEventListener('animationend', e => {
+  if (e.animationName === 'tik') e.target.classList.remove('verwijderd');
+});
 
 /* geen contextmenu / 'kopiëren'-popup bij lang drukken */
 main.addEventListener('contextmenu', e => {
