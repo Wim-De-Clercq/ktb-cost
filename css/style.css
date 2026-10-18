@@ -41,18 +41,15 @@
     height:2px;border-radius:2px;
     background:var(--lijn);
   }
+  /* één item per lijn */
   menu{
     display:grid;
-    grid-template-columns:repeat(2,1fr);
-    grid-auto-flow:row dense;   /* losse items vullen het gat vóór een familie (volle rij) */
-    gap:.55rem;
+    gap:.5rem;
     margin:0;padding:0;list-style:none;
   }
-  @media (min-width:460px){ menu{grid-template-columns:repeat(3,1fr);} }
 
   /* ---- familie: naam + prijs, daaronder een knop per variant ---- */
   menu li.familie{
-    grid-column:1 / -1;
     padding:.45rem .5rem .5rem;
     background:#e4eaf5;
     border-radius:16px;
@@ -67,15 +64,14 @@
     display:grid;grid-auto-flow:column;grid-auto-columns:1fr;
     gap:.4rem;
   }
-  menu .familie button{min-height:50px;padding:.5rem .6rem;border-radius:11px;}
-  /* teller op de hoek, zodat hij de korte labels niet raakt */
-  menu .familie button::after{top:-.45rem;right:-.3rem;z-index:1;}
+  menu .familie button{border-radius:11px;}
 
+  /* knop als rij: naam links, prijs rechts */
   menu button{
     position:relative;
-    width:100%;min-height:62px;
-    display:flex;flex-direction:column;justify-content:center;gap:.1rem;
-    padding:.65rem .75rem;
+    width:100%;min-height:52px;
+    display:flex;justify-content:space-between;align-items:center;gap:.5rem;
+    padding:.5rem .75rem;
     background:var(--kaart);
     border:2px solid var(--lijn);
     border-radius:14px;
@@ -131,9 +127,10 @@
     background:#e7eef9;border-color:var(--basis);
   }
   menu button[data-aantal]:not([data-aantal="0"]) small{color:var(--basis-donker);}
+  /* teller op de hoek, zodat hij naam en prijs niet raakt */
   menu button::after{
     content:attr(data-aantal);
-    position:absolute;top:.3rem;right:.35rem;
+    position:absolute;top:-.45rem;right:-.3rem;z-index:1;
     min-width:1.5rem;height:1.5rem;
     display:grid;place-items:center;
     padding:0 .3rem;
