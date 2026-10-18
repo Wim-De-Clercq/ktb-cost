@@ -98,6 +98,28 @@
   }
   menu button[data-aantal="0"]::after{opacity:0;transform:scale(.5);}
 
+  /* items met eigen achtergrondkleur (3de waarde in de kaart) */
+  menu button.gekleurd{
+    background:var(--kleur);
+    color:var(--tekst);
+  }
+  menu button.gekleurd small{color:var(--tekst);opacity:.8;}
+  menu button.gekleurd[data-aantal]:not([data-aantal="0"]){
+    background:var(--kleur);
+    border-color:var(--paars);
+    box-shadow:0 0 0 2px var(--paars);      /* dikkere rand als geselecteerd */
+  }
+  menu button.gekleurd[data-aantal]:not([data-aantal="0"]) small{color:var(--tekst);}
+  /* vulling in de tekstkleur, zodat ze op elke achtergrond zichtbaar is */
+  menu button.gekleurd::before{background:var(--tekst);opacity:.25;}
+  /* gestreept: zachte halo achter de tekst zodat ze over elke streep leesbaar blijft */
+  menu button.gestreept strong,
+  menu button.gestreept small{
+    text-shadow:
+      1px 1px 0 var(--halo), -1px -1px 0 var(--halo),
+      1px -1px 0 var(--halo), -1px 1px 0 var(--halo),
+      0 0 6px var(--halo);
+  }
   /* ---- vaste onderbalk ---- */
   body > footer{
     position:fixed;left:0;right:0;bottom:0;z-index:3;

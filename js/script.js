@@ -2,45 +2,45 @@ const euro = new Intl.NumberFormat('nl-BE', { style:'currency', currency:'EUR' }
 
 const kaart = [
   { kop:'Water & fris', items:[
-    ['Waterfles (gymnast)', 1.5],
-    ['Water plat/bruis', 2],
-    ['Chocomelk koud', 2],
-    ['Fristi', 2],
-    ['Appelsap', 2],
-    ['Cola', 2.5],
-    ['Cola zero', 2.5],
-    ['Fanta', 2.5],
-    ['Ice-tea', 3],
-    ['Ice-tea zero', 3],
-    ['Ice-tea green', 3],
-    ['Tonic', 3],
+    ['Waterfles (gymnast)', 1.5, 'rgb(193, 225, 255)'],
+    ['Water plat/bruis', 2, 'rgb(193, 225, 255)'],
+    ['Chocomelk koud', 2, '#613419'],
+    ['Fristi', 2, '#f7c3dc'],
+    ['Appelsap', 2, '#debb01'],
+    ['Cola', 2.5, '#F40009'],
+    ['Cola zero', 2.5, '#F40009', 'rgb(7, 4, 0)'],
+    ['Fanta', 2.5, '#FF8300'],
+    ['Ice-tea', 3, '#0236f0', '#e1c601', { tekst:'#f7f6f6' }],
+    ['Ice-tea zero', 3, '#0236f0', '#e1c601', { tekst:'#f7f6f6' }],
+    ['Ice-tea green', 3, '#0236f0', '#e1c601', 'rgb(0, 255, 64)', { tekst:'#f7f6f6' }],
+    ['Tonic', 3, '#f8d866'],
   ]},
   { kop:'Bier', items:[
-    ['Jupiler', 2.5],
-    ['Jupiler 0%', 2.5],
-    ['Kriek', 3.5],
-    ['Kriek 0%', 3.5],
-    ['Vedett', 3.5],
-    ['Duvel', 4.5],
-    ['Duvel 666', 4.5],
-    ['Chouffe 0%', 4.5],
-    ['Westmalle dubbel', 4.5],
-    ['Westmalle tripel', 4.5],
+    ['Jupiler', 2.5, 'rgb(255, 0, 0)'],
+    ['Jupiler 0%', 2.5, 'rgb(253, 0, 0)'],
+    ['Kriek', 3.5, 'rgb(138, 0, 0)'],
+    ['Kriek 0%', 3.5, 'rgb(138, 0, 0)'],
+    ['Vedett', 3.5, '#f7f7f7', '#0a0a0a', '#e72625'],
+    ['Duvel', 4.5, 'rgb(105, 63, 0)'],
+    ['Duvel 666', 4.5, 'rgb(105, 63, 0)'],
+    ['Chouffe 0%', 4.5, 'rgb(105, 63, 0)'],
+    ['Westmalle dubbel', 4.5, 'rgb(105, 63, 0)'],
+    ['Westmalle tripel', 4.5, 'rgb(105, 63, 0)'],
   ]},
   { kop:'Wijn & bubbels', items:[
-    ['Witte wijn', 4],
-    ['Cava', 5],
+    ['Witte wijn', 4, 'rgb(105, 63, 0)'],
+    ['Cava', 5, 'rgb(105, 63, 0)'],
   ]},
   { kop:'Warm', items:[
-    ['Koffie', 3],
-    ['Koffie deca', 3],
-    ['Thee', 3],
-    ['Chocomelk warm', 3],
-    ['Soep', 3],
+    ['Koffie', 3, 'rgb(105, 63, 0)'],
+    ['Koffie deca', 3, 'rgb(105, 63, 0)'],
+    ['Thee', 3, 'rgb(105, 63, 0)'],
+    ['Chocomelk warm', 3, 'rgb(105, 63, 0)'],
+    ['Soep', 3, 'rgb(105, 63, 0)'],
   ]},
   { kop:'Snacks', items:[
-    ['Chips', 2.5],
-    ['Wafel', 2.5],
+    ['Chips', 2.5, 'rgb(105, 63, 0)'],
+    ['Wafel', 2.5, 'rgb(105, 63, 0)'],
   ]},
 ];
 
@@ -61,16 +61,69 @@ const dialoogLijst= dialoog.querySelector('ul');
 const dialoogSom  = dialoog.querySelector('p span');
 const bevestigKnop= dialoog.querySelector('button[value="bevestig"]');
 
+/* relatieve luminantie (WCAG) van een CSS-kleur, of null als ongeldig */
+const kleurCtx = document.createElement('canvas').getContext('2d');
+function luminantie(kleur){
+  /* laat de browser elke CSS-kleur (#fff, 'gold', rgb(...)) omzetten naar #rrggbb */
+  kleurCtx.fillStyle = '#000';
+  kleurCtx.fillStyle = kleur;
+  const hex = kleurCtx.fillStyle;
+  if (!hex.startsWith('#')) return null;              /* onbekend of transparant */
+  const [r, g, b] = [1, 3, 5].map(i => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/* tekstkleur die op ALLE kleuren (strepen) zo leesbaar mogelijk is:
+   kies wit of donker op basis van het slechtste contrast */
+function tekstKleur(luminanties){
+  const metWit    = Math.min(...luminanties.map(L => 1.05 / (L + 0.05)));
+  const metDonker = Math.min(...luminanties.map(L => (L + 0.05) / 0.061));
+  return metWit > metDonker ? '#fff' : '#1b1630';
+}
+
+/* achtergrond: 1 kleur = effen, 2 = brede + smalle streep, 3+ = gelijke strepen */
+function achtergrond(kleuren){
+  if (kleuren.length === 1) return kleuren[0];
+  let stops;
+  if (kleuren.length === 2) {
+    const [a, b] = kleuren;
+    stops = `${a} 0 14px, ${b} 14px 20px`;
+  } else {
+    const w = 10;                                     /* breedte per streep in px */
+    stops = kleuren.map((k, i) => `${k} ${i * w}px ${(i + 1) * w}px`).join(', ');
+  }
+  return `repeating-linear-gradient(45deg, ${stops})`;
+}
+
+function kleurStijl(kleuren, opties = {}){
+  if (!kleuren.length) return '';
+  const lum = kleuren.map(luminantie);
+  if (lum.includes(null)) return '';                  /* ongeldige kleur: standaard look */
+  /* tekstkleur: zelf opgegeven (en geldig) of automatisch */
+  const eigen = opties.tekst && luminantie(opties.tekst) !== null;
+  const tekst = eigen ? opties.tekst : tekstKleur(lum);
+  /* halo tegengesteld aan de tekst: lichte tekst -> donkere halo en omgekeerd */
+  const halo  = luminantie(tekst) > 0.179 ? 'rgba(0,0,0,1)' : 'rgba(255,255,255,1)';
+  const klasse = kleuren.length > 1 ? 'gekleurd gestreept' : 'gekleurd';
+  return ` class="${klasse}" style="--kleur:${achtergrond(kleuren)};--tekst:${tekst};--halo:${halo}"`;
+}
+
 /* menu opbouwen uit de kaart */
 main.innerHTML = kaart.map((groep, g) => `
   <section>
     <h2>${groep.kop}</h2>
     <menu>
-      ${groep.items.map(([naam, prijs], i) =>
-        `<li><button data-id="${g}-${i}" data-aantal="0"
+    ${groep.items.map(([naam, prijs, ...kleuren], i) => {
+        /* optioneel object op het einde, bv. { tekst:'#000' } */
+        const opties = kleuren.at(-1) && typeof kleuren.at(-1) === 'object' ? kleuren.pop() : {};
+        return `<li><button data-id="${g}-${i}" data-aantal="0"${kleurStijl(kleuren, opties)}
                      aria-label="${naam}, ${euro.format(prijs)}">
            <strong>${naam}</strong><small>${euro.format(prijs)}</small>
-         </button></li>`).join('')}
+         </button></li>`;
+      }).join('')}
     </menu>
   </section>`).join('');
 
