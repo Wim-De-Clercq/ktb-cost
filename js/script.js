@@ -2,45 +2,37 @@ const euro = new Intl.NumberFormat('nl-BE', { style:'currency', currency:'EUR' }
 
 const kaart = [
   { kop:'Water & fris', items:[
-    ['Waterfles (gymnast)', 1.5, 'rgb(193, 225, 255)'],
-    ['Water plat/bruis', 2, 'rgb(193, 225, 255)'],
-    ['Chocomelk koud', 2, '#613419'],
-    ['Fristi', 2, '#f7c3dc'],
-    ['Appelsap', 2, '#debb01'],
-    ['Cola', 2.5, '#F40009', '#f7f7f7'],
-    ['Cola zero', 2.5, '#F40009', 'rgb(7, 4, 0)'],
-    ['Fanta', 2.5, '#FF8300'],
-    ['Ice-tea', 3, '#0236f0', '#e1c601'],
-    ['Ice-tea zero', 3, '#0236f0', '#e1c601', 'rgb(7, 4, 0)'],
-    ['Ice-tea green', 3, '#0236f0', '#e1c601', 'rgb(0, 255, 64)'],
-    ['Tonic', 3, '#f8d866'],
+    ['Waterfles (gymnast)', 1.5],
+    ['Water plat/bruis', 2],
+    ['Chocomelk koud', 2],
+    ['Fristi', 2],
+    ['Appelsap', 2],
+    ['Cola', 2.5, ['Gewoon', 'Zero']],
+    ['Fanta', 2.5],
+    ['Ice-tea', 3, ['Gewoon', 'Zero', 'Green']],
+    ['Tonic', 3],
   ]},
   { kop:'Bier', items:[
-    ['Jupiler', 2.5, 'rgb(255, 0, 0)', '#efb13a', '#0a0a0a'],
-    ['Jupiler 0%', 2.5, 'rgb(255, 0, 0)', '#efb13a', '#0a0a0a', '#f7f6f6'],
-    ['Kriek', 3.5, '#8a0026', '#d8b46a'],
-    ['Kriek 0%', 3.5, '#8a0026', '#d8b46a', '#f7f6f6'],
-    ['Vedett', 3.5, '#f7f7f7', '#0a0a0a', '#e72625'],
-    ['Duvel', 4.5, '#f7f6f6', '#d6001c'],
-    ['Duvel 666', 4.5, '#f7f6f6', '#d6001c', '#e9b949' ],
-    ['Chouffe 0%', 4.5, '#d2232a', '#f2e6c9', '#1d5fa8'],
-    ['Westmalle dubbel', 4.5, '#5b2a17', '#c9a55c'],
-    ['Westmalle tripel', 4.5, '#f3ead2', '#c9a55c'],
+    ['Jupiler', 2.5, ['Gewoon', '0%']],
+    ['Kriek', 3.5, ['Gewoon', '0%']],
+    ['Vedett', 3.5],
+    ['Duvel', 4.5, ['Gewoon', '666']],
+    ['Chouffe 0%', 4.5],
+    ['Westmalle', 4.5, ['Dubbel', 'Tripel']],
   ]},
   { kop:'Wijn & bubbels', items:[
-    ['Witte wijn', 4, '#f1e7a8'],
-    ['Cava', 5, '#e3c66d', '#1a1a1a'],
+    ['Witte wijn', 4],
+    ['Cava', 5],
   ]},
   { kop:'Warm', items:[
-    ['Koffie', 3, '#4b2e1f'],
-    ['Koffie deca', 3, '#4b2e1f', '#f28c28'],
-    ['Thee', 3, '#6f8f3a'],
-    ['Chocomelk warm', 3, '#613419', '#f3e6d0'],
-    ['Soep', 3, '#d4541f'],
+    ['Koffie', 3, ['Gewoon', 'Deca']],
+    ['Thee', 3],
+    ['Chocomelk warm', 3],
+    ['Soep', 3],
   ]},
   { kop:'Snacks', items:[
-    ['Chips', 2.5, '#ffd200', '#e2001a'],
-    ['Wafel', 2.5, '#d9a441', '#4b2e1f'],
+    ['Chips', 2.5],
+    ['Wafel', 2.5],
   ]},
 ];
 
@@ -48,11 +40,19 @@ const kaart = [
 for (const groep of kaart)
   groep.items.sort(([a], [b]) => a.localeCompare(b, 'nl', { sensitivity:'base' }));
 
-/* platte opzoektabel: id -> { naam, prijs } */
+/* volledige naam van een variant: 'Gewoon' = de basisnaam, anders bv. 'Ice-tea zero' */
+const volledigeNaam = (naam, variant) =>
+  variant === 'Gewoon' ? naam : `${naam} ${variant.toLowerCase()}`;
+
+/* platte opzoektabel: id -> { naam, prijs }
+   id = 'g-i' voor een gewoon item, 'g-i-v' voor een variant */
 const dranken = {};
 for (const [g, groep] of kaart.entries())
-  for (const [i, [naam, prijs]] of groep.items.entries())
-    dranken[g + '-' + i] = { naam, prijs };
+  for (const [i, [naam, prijs, varianten]] of groep.items.entries()) {
+    if (!varianten) { dranken[`${g}-${i}`] = { naam, prijs }; continue; }
+    for (const [v, variant] of varianten.entries())
+      dranken[`${g}-${i}-${v}`] = { naam: volledigeNaam(naam, variant), prijs };
+  }
 
 const aantal = {};                                   /* id -> aantal */
 const main        = document.querySelector('main');
@@ -65,63 +65,33 @@ const dialoogLijst= dialoog.querySelector('ul');
 const dialoogSom  = dialoog.querySelector('p span');
 const bevestigKnop= dialoog.querySelector('button[value="bevestig"]');
 
-/* relatieve luminantie (WCAG) van een CSS-kleur, of null als ongeldig */
-const kleurCtx = document.createElement('canvas').getContext('2d');
-function luminantie(kleur){
-  /* laat de browser elke CSS-kleur (#fff, 'gold', rgb(...)) omzetten naar #rrggbb */
-  kleurCtx.fillStyle = '#000';
-  kleurCtx.fillStyle = kleur;
-  const hex = kleurCtx.fillStyle;
-  if (!hex.startsWith('#')) return null;              /* onbekend of transparant */
-  const [r, g, b] = [1, 3, 5].map(i => {
-    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
+/* gewoon item: één knop met naam en prijs */
+const itemHtml = (id, naam, prijs) => `
+  <li><button data-id="${id}" data-aantal="0"
+               aria-label="${naam}, ${euro.format(prijs)}">
+     <strong>${naam}</strong><small>${euro.format(prijs)}</small>
+   </button></li>`;
 
-/* tekstkleur die op ALLE kleuren (strepen) zo leesbaar mogelijk is:
-   kies wit of donker op basis van het slechtste contrast */
-function tekstKleur(luminanties){
-  const metWit    = Math.min(...luminanties.map(L => 1.05 / (L + 0.05)));
-  const metDonker = Math.min(...luminanties.map(L => (L + 0.05) / 0.061));
-  return metWit > metDonker ? '#fff' : '#172033';
-}
-
-/* achtergrond: 1 kleur = effen, 2 = brede + smalle streep, 3+ = gelijke strepen */
-function achtergrond(kleuren){
-  if (kleuren.length === 1) return kleuren[0];
-  let stops;
-  if (kleuren.length === 2) {
-    const [a, b] = kleuren;
-    stops = `${a} 0 14px, ${b} 14px 20px`;
-  } else {
-    const w = 10;                                     /* breedte per streep in px */
-    stops = kleuren.map((k, i) => `${k} ${i * w}px ${(i + 1) * w}px`).join(', ');
-  }
-  return `repeating-linear-gradient(45deg, ${stops})`;
-}
-
-function kleurStijl(kleuren){
-  if (!kleuren.length) return '';
-  const lum = kleuren.map(luminantie);
-  if (lum.includes(null)) return '';                  /* ongeldige kleur: standaard look */
-  const tekst = tekstKleur(lum);
-  /* halo tegengesteld aan de tekst: lichte tekst -> donkere halo en omgekeerd */
-  const halo  = luminantie(tekst) > 0.179 ? 'rgba(0,0,0,1)' : 'rgba(255,255,255,1)';
-  return ` class="gekleurd" style="--kleur:${achtergrond(kleuren)};--tekst:${tekst};--halo:${halo}"`;
-}
+/* familie: naam + prijs één keer, daaronder een knop per variant */
+const familieHtml = (id, naam, prijs, varianten) => `
+  <li class="familie">
+    <p><strong>${naam}</strong><small>${euro.format(prijs)}</small></p>
+    <div>${varianten.map((variant, v) => `
+      <button data-id="${id}-${v}" data-aantal="0"
+              aria-label="${volledigeNaam(naam, variant)}, ${euro.format(prijs)}">
+        <strong>${variant}</strong>
+      </button>`).join('')}
+    </div>
+  </li>`;
 
 /* menu opbouwen uit de kaart */
 main.innerHTML = kaart.map((groep, g) => `
   <section>
     <h2>${groep.kop}</h2>
     <menu>
-    ${groep.items.map(([naam, prijs, ...kleuren], i) => `
-        <li><button data-id="${g}-${i}" data-aantal="0"${kleurStijl(kleuren)}
-                     aria-label="${naam}, ${euro.format(prijs)}">
-           <strong>${naam}</strong><small>${euro.format(prijs)}</small>
-         </button></li>`).join('')}
+    ${groep.items.map(([naam, prijs, varianten], i) => varianten
+        ? familieHtml(`${g}-${i}`, naam, prijs, varianten)
+        : itemHtml(`${g}-${i}`, naam, prijs)).join('')}
     </menu>
   </section>`).join('');
 
