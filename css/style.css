@@ -1,0 +1,158 @@
+:root{
+    --paars:#6d4aff;
+    --paars-donker:#5741d6;
+    --inkt:#1b1630;
+    --zacht:#6b6485;
+    --lijn:#e3dfff;
+    --kaart:#ffffff;
+    --achtergrond:#f4f2ff;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--achtergrond);
+    color:var(--inkt);
+    padding-bottom:calc(6.5rem + env(safe-area-inset-bottom));
+  }
+
+  /* ---- kop ---- */
+  header{
+    position:sticky;top:0;z-index:3;
+    background:var(--paars);color:#fff;
+    padding:.9rem 1rem;
+    padding-top:calc(.9rem + env(safe-area-inset-top));
+  }
+  header h1{margin:0;font-size:1.2rem;}
+  header p{margin:.15rem 0 0;font-size:.8rem;opacity:.85;}
+
+  /* ---- menu ---- */
+  main{max-width:640px;margin:0 auto;padding:.9rem .75rem 1.5rem;}
+  section{margin-bottom:1.4rem;}
+  section h2{
+    margin:0 0 .5rem .2rem;
+    font-size:.78rem;font-weight:700;
+    text-transform:uppercase;letter-spacing:.07em;
+    color:var(--zacht);
+  }
+  menu{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:.55rem;
+    margin:0;padding:0;list-style:none;
+  }
+  @media (min-width:460px){ menu{grid-template-columns:repeat(3,1fr);} }
+
+  menu button{
+    position:relative;
+    width:100%;min-height:62px;
+    display:flex;flex-direction:column;justify-content:center;gap:.1rem;
+    padding:.65rem .75rem;
+    background:var(--kaart);
+    border:2px solid var(--lijn);
+    border-radius:14px;
+    font:inherit;color:inherit;text-align:left;
+    cursor:pointer;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+    transition:background .15s,border-color .15s,transform .08s;
+  }
+  menu button strong{font-size:.92rem;font-weight:600;line-height:1.2;}
+  menu button small{font-size:.82rem;color:var(--zacht);}
+  menu button:active{transform:scale(.97);}
+  menu button[data-aantal]:not([data-aantal="0"]){
+    background:#efeaff;border-color:var(--paars);
+  }
+  menu button[data-aantal]:not([data-aantal="0"]) small{color:var(--paars-donker);}
+  menu button::after{
+    content:attr(data-aantal);
+    position:absolute;top:.3rem;right:.35rem;
+    min-width:1.5rem;height:1.5rem;
+    display:grid;place-items:center;
+    padding:0 .3rem;
+    border-radius:999px;
+    background:var(--paars);color:#fff;
+    font-size:.75rem;font-weight:700;
+    opacity:1;transform:scale(1);
+    transition:opacity .15s,transform .15s;
+  }
+  menu button[data-aantal="0"]::after{opacity:0;transform:scale(.5);}
+
+  /* ---- vaste onderbalk ---- */
+  body > footer{
+    position:fixed;left:0;right:0;bottom:0;z-index:3;
+    display:flex;align-items:center;gap:.6rem;
+    background:#fff;
+    border-top:1px solid var(--lijn);
+    box-shadow:0 -6px 24px rgba(27,22,48,.09);
+    padding:.6rem;
+    padding-left:max(.6rem,calc((100vw - 654px)/2));
+    padding-right:max(.6rem,calc((100vw - 654px)/2));
+    padding-bottom:calc(.6rem + env(safe-area-inset-bottom));
+  }
+  footer output{
+    flex:1;min-width:0;
+    font-size:1.3rem;font-weight:700;color:var(--paars);
+    font-variant-numeric:tabular-nums;
+  }
+  footer output small{
+    display:block;font-size:.68rem;font-weight:600;
+    text-transform:uppercase;letter-spacing:.07em;color:var(--zacht);
+  }
+  footer button{
+    min-height:48px;
+    border:none;border-radius:12px;
+    padding:0 .95rem;
+    font:inherit;font-weight:600;
+    cursor:pointer;touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+  footer button[data-actie="wis"]{background:#efedf7;color:#4a4468;}
+  footer button[data-actie="afrekenen"]{background:var(--paars);color:#fff;}
+  footer button:disabled{opacity:.4;cursor:default;}
+  footer button:not(:disabled):active{transform:scale(.96);}
+
+  /* ---- dialoogvenster (bottom sheet) ---- */
+  dialog{
+    position:fixed;inset:auto 0 0 0;margin:0 auto;
+    width:100%;max-width:560px;max-height:82vh;
+    border:none;border-radius:20px 20px 0 0;
+    padding:1rem;
+    padding-bottom:calc(1rem + env(safe-area-inset-bottom));
+    background:#fff;color:var(--inkt);
+    box-shadow:0 -10px 40px rgba(27,22,48,.28);
+  }
+  dialog::backdrop{background:rgba(27,22,48,.45);}
+  dialog h2{margin:0 0 .75rem;font-size:1.05rem;}
+  dialog ul{margin:0;padding:0;list-style:none;overflow-y:auto;max-height:52vh;}
+  dialog li{
+    display:grid;grid-template-columns:1fr auto auto auto;
+    align-items:center;gap:.5rem;
+    padding:.5rem 0;border-bottom:1px solid #f0eef8;
+  }
+  dialog li:last-child{border-bottom:none;}
+  dialog li strong{display:block;font-size:.92rem;font-weight:600;}
+  dialog li small{font-size:.78rem;color:var(--zacht);}
+  dialog li b{min-width:1.5rem;text-align:center;font-variant-numeric:tabular-nums;}
+  dialog li button{
+    width:38px;height:38px;
+    border:2px solid var(--lijn);border-radius:10px;
+    background:#fff;color:var(--paars);
+    font:inherit;font-size:1.1rem;font-weight:700;line-height:1;
+    cursor:pointer;touch-action:manipulation;
+  }
+  dialog li button:active{background:#efeaff;}
+  dialog > p{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin:1rem 0;font-weight:700;
+  }
+  dialog > p span{color:var(--paars);font-size:1.3rem;font-variant-numeric:tabular-nums;}
+  dialog form{display:flex;gap:.6rem;}
+  dialog form button{
+    flex:1;min-height:50px;border:none;border-radius:12px;
+    font:inherit;font-weight:600;cursor:pointer;touch-action:manipulation;
+  }
+  dialog form button[value="sluit"]{background:#efedf7;color:#4a4468;}
+  dialog form button[value="bevestig"]{background:var(--paars);color:#fff;}
+  dialog form button:disabled{opacity:.4;}
