@@ -148,7 +148,7 @@ function teken(){
     const d = dranken[id];
     return `<li>
       <span><strong>${d.naam}</strong>
-      <small>${euro.format(d.prijs)} × ${n} = ${euro.format(d.prijs * n)}</small></span>
+      <small>${euro.format(d.prijs)} × ${n} = <em>${euro.format(d.prijs * n)}</em></small></span>
       <button data-min="${id}" aria-label="Minder ${d.naam}">−</button>
       <b>${n}</b>
       <button data-plus="${id}" aria-label="Meer ${d.naam}">+</button>
@@ -276,8 +276,52 @@ wisKnop.addEventListener('click', () => {
 
 overzichtKnop.addEventListener('click', () => dialoog.showModal());
 
+/* overzicht naar beneden vegen = sluiten (niet vanuit de lijst, die scrollt zelf) */
+const SLUIT_AFSTAND = 100;  /* px naar beneden */
+const SLUIT_SNELHEID = 0.5; /* px/ms: snel wegvegen mag ook korter */
+let veeg = null;            /* { y, t, dy } tijdens het slepen */
+let negeerDialoogKlik = false;
+
+dialoog.addEventListener('pointerdown', e => {
+  negeerDialoogKlik = false;
+  if (e.target !== dialoog && (e.target.closest('ul') || e.target.closest('button'))) return;
+  veeg = { y: e.clientY, t: performance.now(), dy: 0 };
+  dialoog.setPointerCapture(e.pointerId);
+  dialoog.style.transition = 'none';
+});
+
+dialoog.addEventListener('pointermove', e => {
+  if (!veeg) return;
+  veeg.dy = Math.max(0, e.clientY - veeg.y);
+  dialoog.style.transform = `translateY(${veeg.dy}px)`;
+});
+
+function stopVeeg(){
+  if (!veeg) return;
+  const { dy, t } = veeg;
+  veeg = null;
+  if (dy > 5) negeerDialoogKlik = true;     /* slepen is geen klik op de achtergrond */
+  const snel = dy / (performance.now() - t) > SLUIT_SNELHEID;
+  dialoog.style.transition = 'transform .2s ease-out';
+  if (dy > SLUIT_AFSTAND || (snel && dy > 30)) {
+    dialoog.style.transform = 'translateY(100%)';
+    dialoog.addEventListener('transitionend', () => dialoog.close(), { once:true });
+  } else {
+    dialoog.style.transform = '';
+  }
+}
+dialoog.addEventListener('pointerup', stopVeeg);
+dialoog.addEventListener('pointercancel', stopVeeg);
+
+/* na sluiten (op welke manier ook) de sleeppositie resetten */
+dialoog.addEventListener('close', () => {
+  dialoog.style.transition = 'none';
+  dialoog.style.transform = '';
+});
+
 /* klik buiten het venster (op de achtergrond) = sluiten */
 dialoog.addEventListener('click', e => {
+  if (negeerDialoogKlik) { negeerDialoogKlik = false; return; }
   if (e.target !== dialoog) return;          /* klik op inhoud van het venster */
   const r = dialoog.getBoundingClientRect();
   const binnen = e.clientX >= r.left && e.clientX <= r.right &&
